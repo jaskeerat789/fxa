@@ -1553,6 +1553,8 @@ module.exports = function(log, error) {
           .createHash(data.recoveryKeyId)
           .toString('hex'),
         recoveryData: data.recoveryData,
+        createdAt: Date.now(),
+        enabled: data.enabled,
       };
 
       return {};
@@ -1581,13 +1583,13 @@ module.exports = function(log, error) {
 
   Memory.prototype.recoveryKeyExists = function(uid) {
     uid = uid.toString('hex');
-    let exists = true;
+    let exists = false;
     return getAccountByUid(uid)
       .then(() => {
         const recoveryKey = recoveryKeys[uid];
 
-        if (!recoveryKey) {
-          exists = false;
+        if (recoveryKey && recoveryKey.enabled) {
+          exists = true;
         }
 
         return { exists };
@@ -1602,6 +1604,20 @@ module.exports = function(log, error) {
 
         throw err;
       });
+  };
+
+  Memory.prototype.updateRecoveryKey = function(uid, options) {
+    uid = uid.toString('hex');
+    return getAccountByUid(uid).then(() => {
+      if (!recoveryKeys[uid]) {
+        return P.reject(error.notFound());
+      }
+
+      recoveryKeys[uid].verifiedAt = options.verifiedAt;
+      recoveryKeys[uid].enabled = options.enabled;
+
+      return {};
+    });
   };
 
   Memory.prototype.deleteRecoveryKey = function(options) {
