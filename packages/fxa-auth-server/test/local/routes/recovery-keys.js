@@ -132,6 +132,15 @@ describe('POST /recoveryKey', () => {
       assert.deepEqual(response, {});
     });
 
+    it('called customs.checkAuthenticated correctly', () => {
+      assert.equal(customs.checkAuthenticated.callCount, 1);
+      const args = customs.checkAuthenticated.args[0];
+      assert.equal(args.length, 3);
+      assert.deepEqual(args[0], request);
+      assert.equal(args[1], uid);
+      assert.equal(args[2], 'getRecoveryKey');
+    });
+
     it('called db.updateRecoveryKey correctly', () => {
       assert.equal(db.updateRecoveryKey.callCount, 1);
       const args = db.updateRecoveryKey.args[0];

@@ -87,12 +87,16 @@ module.exports = (log, db, Password, verifierVersion, customs, mailer) => {
         log.begin('verifyRecoveryKey', request);
 
         const sessionToken = request.auth.credentials;
+        const { uid } = sessionToken;
 
         if (sessionToken.tokenVerificationId) {
           throw errors.unverifiedSession();
         }
 
-        const { uid } = sessionToken;
+        // This route can let you check if a key is valid therefore we
+        // rate limit it.
+        await customs.checkAuthenticated(request, uid, 'getRecoveryKey');
+
         const { recoveryKeyId } = request.payload;
 
         // Attempt to retrieve a recovery key, if it exists and is not already enabled,
